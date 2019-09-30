@@ -1,0 +1,88 @@
+********************************************************************************
+                                xyz-hub-east       
+********************************************************************************
+
+!---- Interfaces xyz-hub-east----!
+
+interface TenGigE0/0/0/9.121
+    description link xyz-east-rtr v121 - - vendor
+    vrf vendor
+    ipv4 mtu 1500
+    ipv4 address 172.18.208.206 255.255.255.252
+    encapsulation dot1q 121
+
+interface TenGigE0/0/0/9.122
+    description link xyz-east-rtr v122 - - voice
+    vrf voice
+    ipv4 mtu 1500
+    ipv4 address 172.18.241.114 255.255.255.252
+    encapsulation dot1q 122
+
+!---- BGP CONFIG xyz-hub-east----!
+router bgp 90210
+ vrf vendor
+  neighbor 172.18.208.205
+  remote-as 11111
+  bfd fast-detect
+  bfd multiplier 3
+  bfd minimum-interval 750
+  description xyz-east-rtr
+  password abcd1234
+  address-family ipv4 unicast
+   use af-group VPN_VRF_POLICY
+ vrf voice
+  neighbor 172.18.241.113
+  remote-as 11111
+  bfd fast-detect
+  bfd multiplier 3
+  bfd minimum-interval 750
+  description xyz-east-rtr
+  password abcd1234
+  address-family ipv4 unicast
+   use af-group VPN_VRF_POLICY
+
+********************************************************************************
+                                xyz-hub-north       
+********************************************************************************
+
+!---- Interfaces xyz-hub-north----!
+
+interface TenGigE0/0/0/22.131
+    description link xyz-east-rtr v131 - - vendor
+    vrf vendor
+    ipv4 mtu 1500
+    ipv4 address 172.18.208.210 255.255.255.252
+    encapsulation dot1q 131
+
+interface TenGigE0/0/0/22.132
+    description link xyz-east-rtr v132 - - voice
+    vrf voice
+    ipv4 mtu 1500
+    ipv4 address 172.18.241.118 255.255.255.252
+    encapsulation dot1q 132
+
+
+!---- BGP CONFIG xyz-hub-north----!
+
+router bgp 90210
+ vrf vendor
+  neighbor 172.18.208.209
+   remote-as 11111
+   bfd fast-detect
+   bfd multiplier 3
+   bfd minimum-interval 750
+   description xyz-east-rtr
+   password abcd1234
+   address-family ipv4 unicast
+    use af-group VPN_VRF_POLICY
+ vrf voice
+  neighbor 172.18.241.117
+   remote-as 11111
+   bfd fast-detect
+   bfd multiplier 3
+   bfd minimum-interval 750
+   description xyz-east-rtr
+   password abcd1234
+   address-family ipv4 unicast
+    use af-group VPN_VRF_POLICY
+

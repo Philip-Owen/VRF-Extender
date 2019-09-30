@@ -1,0 +1,79 @@
+********************************************************************************
+                                xyz-east-rtr       
+********************************************************************************
+
+----- VRF DEFINITION -----
+
+vrf definition vendor
+  rd 90210:3266
+  address-family ipv4
+!
+vrf definition voice
+  rd 90210:3267
+  address-family ipv4
+!
+
+----- L3 INTERFACES -----
+
+interface vlan121
+  description link xyz-hub-east TenGigE0/0/0/9.121 - - vendor
+  vrf forwarding vendor
+  ip address 172.18.208.205 255.255.255.252
+  bfd interval 750 min_rx 800 multiplier 3
+!
+interface vlan131
+  description link xyz-hub-north TenGigE0/0/0/22.131 - - vendor
+  vrf forwarding vendor
+  ip address 172.18.208.209 255.255.255.252
+  bfd interval 750 min_rx 800 multiplier 3
+!
+interface vlan122
+  description link xyz-hub-east TenGigE0/0/0/9.122 - - voice
+  vrf forwarding voice
+  ip address 172.18.241.113 255.255.255.252
+  bfd interval 750 min_rx 800 multiplier 3
+!
+interface vlan132
+  description link xyz-hub-north TenGigE0/0/0/22.132 - - voice
+  vrf forwarding voice
+  ip address 172.18.241.117 255.255.255.252
+  bfd interval 750 min_rx 800 multiplier 3
+!
+
+
+----- BGP CONFIG -----
+router bgp 11111
+ address-family ipv4 vrf vendor
+  redistribute static
+  redistribute connected
+  neighbor 172.18.208.206 remote-as 90210
+  neighbor 172.18.208.206 description xyz-hub-east
+  neighbor 172.18.208.206 fall-over bfd
+  neighbor 172.18.208.206 activate
+  neighbor 172.18.208.206 password abcd1234
+  neighbor 172.18.208.206 send-community both
+  neighbor 172.18.208.206 inherit peer-policy PRIMARY_PATH
+  neighbor 172.18.208.210 remote-as 90210
+  neighbor 172.18.208.210 description xyz-hub-north
+  neighbor 172.18.208.210 fall-over bfd
+  neighbor 172.18.208.210 activate
+  neighbor 172.18.208.210 password abcd1234
+  neighbor 172.18.208.210 send-community both
+  neighbor 172.18.208.210 inherit peer-policy SECONDARY_PATH
+ address-family ipv4 vrf voice
+  redistribute static
+  redistribute connected
+  neighbor 172.18.241.114 remote-as 90210
+  neighbor 172.18.241.114 description xyz-hub-east
+  neighbor 172.18.241.114 fall-over bfd
+  neighbor 172.18.241.114 activate
+  neighbor 172.18.241.114 password abcd1234
+  neighbor 172.18.241.114 send-community both
+  neighbor 172.18.241.114 inherit peer-policy PRIMARY_PATH
+  neighbor 172.18.241.118 remote-as 90210
+  neighbor 172.18.241.118 description xyz-hub-north
+  neighbor 172.18.241.118 fall-over bfd
+  neighbor 172.18.241.118 activate
+  neighbor 172.18.241.118 password abcd1234
+  neighbor 172.18.241.118 send-community both
+  neighbor 172.18.241.118 inherit peer-policy SECONDARY_PATH
