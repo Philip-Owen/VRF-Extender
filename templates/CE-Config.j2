@@ -1,0 +1,85 @@
+********************************************************************************
+                                {{ ce_hostname }}       
+********************************************************************************
+
+----- VRF DEFINITION -----
+
+{% for vrf in vrfs %}
+vrf definition {{ vrf.vrf_name }}
+  rd {{ vrf.ce_rd }}
+  address-family ipv4
+!
+{% endfor %}
+
+----- L3 INTERFACES -----
+
+{% for vrf in vrfs %}
+interface {{ vrf.primary_path.ce_interface }}
+  description link {{ pe.primary.hostname }} {{ vrf.primary_path.pe_interface }} - - {{ vrf.vrf_name }}
+  vrf forwarding {{ vrf.vrf_name }}
+  {% if vrf.primary_path.ce_interface|first != 'v' and vrf.primary_path.ce_interface|first != 'V' %}
+    {% set vlan = vrf.primary_path.ce_interface.split('.') %}
+  encapsulation dot1Q {{ vlan[1] }}
+  {% endif %}
+  ip address {{ vrf.primary_path.ce_ip }} 255.255.255.252
+  bfd interval {{ bfd_value }} min_rx 800 multiplier 3
+!
+{% if pe.secondary.hostname|length > 0 %}
+interface {{ vrf.secondary_path.ce_interface }}
+  description link {{ pe.secondary.hostname }} {{ vrf.secondary_path.pe_interface }} - - {{ vrf.vrf_name }}
+  vrf forwarding {{ vrf.vrf_name }}
+  {% if vrf.secondary_path.ce_interface|first != 'v' and vrf.secondary_path.ce_interface|first != 'V' %}
+    {% set vlan = vrf.secondary_path.ce_interface.split('.') %}
+  encapsulation dot1Q {{ vlan[1] }}
+  {% endif %}
+  ip address {{ vrf.secondary_path.ce_ip }} 255.255.255.252
+  bfd interval {{ bfd_value }} min_rx 800 multiplier 3
+!
+{% endif %}
+{% if pe.tertiary %}
+interface {{ vrf.tertiary_path.ce_interface }}
+  description link {{ pe.tertiary.Hostname }} {{ vrf.tertiary_path.pe_interface }} - - {{ vrf.vrf_name }}
+  vrf forwarding {{ vrf.vrf_name }}
+  {% if vrf.tertiary_path.ce_interface|first != 'v' and vrf.tertiary_path.ce_interface|first != 'V' %}
+    {% set vlan = vrf.tertiary_path.ce_interface.split('.') %}
+  encapsulation dot1Q {{ vlan[1] }}
+  {% endif %}
+  ip address {{ vrf.tertiary_path.ce_ip }} 255.255.255.252
+  bfd interval {{ bfd_value }} min_rx 800 multiplier 3
+!
+{% endif %}
+{% endfor %}
+
+
+----- BGP CONFIG -----
+router bgp {{ ce_as_number }}
+{% for vrf in vrfs %}
+ address-family ipv4 vrf {{ vrf.vrf_name }}
+  redistribute static
+  redistribute connected
+  neighbor {{ vrf.primary_path.pe_ip }} remote-as {{ pe.primary.as_number }}
+  neighbor {{ vrf.primary_path.pe_ip }} description {{ pe.primary.hostname }}
+  neighbor {{ vrf.primary_path.pe_ip }} fall-over bfd
+  neighbor {{ vrf.primary_path.pe_ip }} activate
+  neighbor {{ vrf.primary_path.pe_ip }} password {{ bgp_password }}
+  neighbor {{ vrf.primary_path.pe_ip }} send-community both
+  neighbor {{ vrf.primary_path.pe_ip }} inherit peer-policy PRIMARY_PATH
+  {% if pe.secondary.hostname|length > 0 %}
+  neighbor {{ vrf.secondary_path.pe_ip }} remote-as {{ pe.secondary.as_number }}
+  neighbor {{ vrf.secondary_path.pe_ip }} description {{ pe.secondary.hostname }}
+  neighbor {{ vrf.secondary_path.pe_ip }} fall-over bfd
+  neighbor {{ vrf.secondary_path.pe_ip }} activate
+  neighbor {{ vrf.secondary_path.pe_ip }} password {{ bgp_password }}
+  neighbor {{ vrf.secondary_path.pe_ip }} send-community both
+  neighbor {{ vrf.secondary_path.pe_ip }} inherit peer-policy SECONDARY_PATH
+  {% endif %}
+  {% if pe.tertiary %}
+  neighbor {{ vrf.tertiary_path.pe_ip }} remote-as {{ pe.tertiary.as_number }}
+  neighbor {{ vrf.tertiary_path.pe_ip }} description {{ pe.tertiary.Hostname }}
+  neighbor {{ vrf.tertiary_path.pe_ip }} fall-over bfd
+  neighbor {{ vrf.tertiary_path.pe_ip }} activate
+  neighbor {{ vrf.tertiary_path.pe_ip }} password {{ bgp_password }}
+  neighbor {{ vrf.tertiary_path.pe_ip }} send-community both
+  neighbor {{ vrf.tertiary_path.pe_ip }} inherit peer-policy TERTIARY_PATH
+  {% endif %}
+{% endfor %}

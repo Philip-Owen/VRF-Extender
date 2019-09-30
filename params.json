@@ -1,0 +1,50 @@
+{
+    "ce_hostname": "xyz-east-rtr",
+    "ce_as_number": 11111,
+    "bfd_value": 750,
+    "bgp_password": "abcd1234",
+    "pe": {
+        "primary": {
+            "hostname": "xyz-hub-east",
+            "as_number": 90210
+        },
+        "secondary": {
+            "hostname": "xyz-hub-north",
+            "as_number": 90210
+        }
+    },
+    "vrfs": [
+        {
+            "vrf_name": "vendor",
+            "ce_rd": "90210:3266",
+            "primary_path": {
+                "ce_interface": "vlan121",
+                "ce_ip": "172.18.208.205",
+                "pe_interface": "TenGigE0/0/0/9.121",
+                "pe_ip": "172.18.208.206"
+            },
+            "secondary_path": {
+                "ce_interface": "vlan131",
+                "ce_ip": "172.18.208.209",
+                "pe_interface": "TenGigE0/0/0/22.131",
+                "pe_ip": "172.18.208.210"
+            }
+        },
+        {
+            "vrf_name": "voice",
+            "ce_rd": "90210:3267",
+            "primary_path": {
+                "ce_interface": "vlan122",
+                "ce_ip": "172.18.241.113",
+                "pe_interface": "TenGigE0/0/0/9.122",
+                "pe_ip": "172.18.241.114"
+            },
+            "secondary_path": {
+                "ce_interface": "vlan132",
+                "ce_ip": "172.18.241.117",
+                "pe_interface": "TenGigE0/0/0/22.132",
+                "pe_ip": "172.18.241.118"
+            }
+        }
+    ]
+}

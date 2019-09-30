@@ -1,0 +1,100 @@
+********************************************************************************
+                                {{ pe.primary.hostname }}       
+********************************************************************************
+
+!---- Interfaces {{ pe.primary.hostname }}----!
+{% for vrf in vrfs %}
+
+interface {{ vrf.primary_path.pe_interface }}
+    {% set vlan = vrf.primary_path.pe_interface.split('.') %}
+    description link {{ce_hostname}} v{{vlan[1]}} - - {{ vrf.vrf_name }}
+    vrf {{ vrf.vrf_name }}
+    ipv4 mtu 1500
+    ipv4 address {{ vrf.primary_path.pe_ip }} 255.255.255.252
+    encapsulation dot1q {{vlan[1]}}
+{% endfor %}
+
+!---- BGP CONFIG {{ pe.primary.hostname }}----!
+router bgp {{ pe.primary.as_number }}
+{% for vrf in vrfs %}
+ vrf {{ vrf.vrf_name }}
+  neighbor {{ vrf.primary_path.ce_ip}}
+  remote-as {{ ce_as_number }}
+  bfd fast-detect
+  bfd multiplier 3
+  bfd minimum-interval {{ bfd_value }}
+  description {{ ce_hostname }}
+  password {{ bgp_password }}
+  address-family ipv4 unicast
+   use af-group VPN_VRF_POLICY
+{% endfor %}
+
+{% if pe.secondary %}
+********************************************************************************
+                                {{ pe.secondary.hostname }}       
+********************************************************************************
+
+!---- Interfaces {{ pe.secondary.hostname }}----!
+
+{% for vrf in vrfs %}
+interface {{ vrf.secondary_path.pe_interface }}
+    {% set vlan = vrf.secondary_path.pe_interface.split('.') %}
+    description link {{ce_hostname}} v{{vlan[1]}} - - {{ vrf.vrf_name }}
+    vrf {{ vrf.vrf_name }}
+    ipv4 mtu 1500
+    ipv4 address {{ vrf.secondary_path.pe_ip }} 255.255.255.252
+    encapsulation dot1q {{vlan[1]}}
+
+{% endfor %}
+
+!---- BGP CONFIG {{ pe.secondary.hostname }}----!
+
+router bgp {{ pe.secondary.as_number }}
+{% for vrf in vrfs %}
+ vrf {{ vrf.vrf_name }}
+  neighbor {{ vrf.secondary_path.ce_ip }}
+   remote-as {{ ce_as_number }}
+   bfd fast-detect
+   bfd multiplier 3
+   bfd minimum-interval {{ bfd_value }}
+   description {{ ce_hostname }}
+   password {{ bgp_password }}
+   address-family ipv4 unicast
+    use af-group VPN_VRF_POLICY
+{% endfor %}
+{% endif %}
+
+{% if pe.tertiary %}
+********************************************************************************
+                                {{ pe.tertiary.hostname }}       
+********************************************************************************
+
+!---- Interfaces {{ pe.tertiary.hostname }}----!
+
+{% for vrf in vrfs %}
+interface {{ vrf.tertiary_path.pe_interface }}
+    {% set vlan = vrf.tertiary_path.pe_interface.split('.') %}
+    description link {{ce_hostname}} v{{vlan[1]}} - - {{ vrf.vrf_name }}
+    vrf {{ vrf.vrf_name }}
+    ipv4 mtu 1500
+    ipv4 address {{ vrf.tertiary_path.pe_ip }} 255.255.255.252
+    encapsulation dot1q {{vlan[1]}}
+
+{% endfor %}
+
+!---- BGP CONFIG {{ pe.tertiary.hostname }}----!
+
+router bgp {{ pe.tertiary.as_number }}
+{% for vrf in vrfs %}
+ vrf {{ vrf.vrf_name }}
+  neighbor {{ vrf.tertiary_path.ce_ip }}
+   remote-as {{ ce_as_number }}
+   bfd fast-detect
+   bfd multiplier 3
+   bfd minimum-interval {{ bfd_value }}
+   description {{ ce_hostname }}
+   password {{ bgp_password }}
+   address-family ipv4 unicast
+    use af-group VPN_VRF_POLICY
+{% endfor %}
+{% endif %}
